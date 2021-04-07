@@ -27,13 +27,14 @@ namespace SSB.Tests
 		{
 			var msg = "hello there!";
 
-			var ctxt = PrivateBox.Multibox(msg, new byte[][] { alice.PublicKey, bob.PublicKey }, 7);
+			var ctxt = PrivateBox.Multibox(msg, new byte[][] { alice.PublicKey, bob.PublicKey }, 2);
 
-			foreach(var sk in new byte[][] { alice.PrivateKey, bob.PrivateKey })
+			var pvKeys = new byte[][] { alice.PrivateKey, bob.PrivateKey };
+			foreach (var sk in pvKeys)
 			{
-				var txt = PrivateBox.MultiboxOpen(ctxt, sk, 7);
+				var txt = System.Text.Encoding.UTF8.GetString(PrivateBox.MultiboxOpen(ctxt, sk, 2));
 
-				Assert.AreNotEqual(msg, txt);
+				Assert.AreNotSame(msg, txt);
 			}
 		}
 	}

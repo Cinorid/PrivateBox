@@ -35,7 +35,8 @@ namespace SSB
 			var key = RandomBytes(32);
 			var onetime = PublicKeyBox.GenerateKeyPair();
 
-			var length_and_key = new List<byte>(new byte[recipients.Length]);
+			var length_and_key = new List<byte>();
+			length_and_key.Add((byte)recipients.Length);
 			length_and_key.AddRange(key);
 
 			var res = new List<byte>(nonce);
@@ -55,7 +56,7 @@ namespace SSB
 			max = SetMax(max);
 
 			var nonce = SubArray(ctxt, 0, 24);
-			var onetime_pk = SubArray(ctxt, 24, 24 + 32);
+			var onetime_pk = SubArray(ctxt, 24, 32);
 			var my_key = ScalarMult.Mult(sk, onetime_pk);
 			//var key = 24 + 32;
 			//var length = 24 + 32;
@@ -67,7 +68,7 @@ namespace SSB
 
 				if (s + size > (ctxt.Length - 16)) return null;
 
-				var length_and_key = SecretBox.Open(SubArray(ctxt,s, s + size), nonce, my_key);
+				var length_and_key = SecretBox.Open(SubArray(ctxt,s, size), nonce, my_key);
 
 				if (length_and_key != null)
 				{
@@ -100,7 +101,7 @@ namespace SSB
 				return null;
 		}
 
-		public static T[] SubArray<T>(T[] data, int index, int length)
+		private static T[] SubArray<T>(T[] data, int index, int length)
 		{
 			T[] result = new T[length];
 			Array.Copy(data, index, result, 0, length);
