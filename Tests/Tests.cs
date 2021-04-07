@@ -1,34 +1,40 @@
 using NUnit.Framework;
+using Sodium;
 using System.Security.Cryptography;
 
-namespace SSB.PrivateBox.Tests
+namespace SSB.Tests
 {
 	public class Tests
 	{
-		Keys keys;
+		KeyPair alice;
+		KeyPair bob;
 
 		[SetUp]
 		public void Setup()
 		{
-			keys = new Keys
-			{
-				Curve = "ed25519",
-				Public = "1nf1T1tUSa43dWglCHzyKIxV61jG/EeeL1Xq1Nk8I3U=.ed25519",
-				Private = "GO0Lv5BvcuuJJdHrokHoo0PmCDC/XjO/SZ6H+ddq4UvWd/VPW1RJrjd1aCUIfPIojFXrWMb8R54vVerU2TwjdQ==.ed25519",
-				ID = "@1nf1T1tUSa43dWglCHzyKIxV61jG/EeeL1Xq1Nk8I3U=.ed25519"
-			};
+			var seed = new byte[32];
+
+			RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+			seed = new byte[32];
+			rng.GetBytes(seed);
+
+			alice = PublicKeyBox.GenerateKeyPair();
+			bob = PublicKeyBox.GenerateKeyPair();
 		}
 
 		[Test]
-		public void TestParseKeyFromString()
+		public void TestSimple()
 		{
-			var testKey = Keys.FromString(
-										@"{ curve: 'ed25519',
-										  public: '1nf1T1tUSa43dWglCHzyKIxV61jG/EeeL1Xq1Nk8I3U=.ed25519',
-										  private: 'GO0Lv5BvcuuJJdHrokHoo0PmCDC/XjO/SZ6H+ddq4UvWd/VPW1RJrjd1aCUIfPIojFXrWMb8R54vVerU2TwjdQ==.ed25519',
-										  id: '@1nf1T1tUSa43dWglCHzyKIxV61jG/EeeL1Xq1Nk8I3U=.ed25519' }");
+			var msg = "hello there!";
 
-			Assert.AreEqual(testKey, keys);
+			var ctxt = PrivateBox.Multibox(msg, new byte[][] { alice.PublicKey, bob.PublicKey }, 7);
+
+			foreach(var sk in new byte[][] { alice.PrivateKey, bob.PrivateKey })
+			{
+				var txt = PrivateBox.MultiboxOpen(ctxt, sk, 7);
+
+				Assert.AreNotEqual(msg, txt);
+			}
 		}
 	}
 }
