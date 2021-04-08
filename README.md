@@ -6,7 +6,7 @@ A format for encrypting a private message to many parties.
 
 ## API
 
-### Encrypt (byte[] plaintext, recipients Array<curve25519_pk>)
+### Encrypt (byte[] plaintext, byte[][] recipients)
 
 Takes a `plaintext` Buffer of the message you want to encrypt,
 and an array of recipient public keys.
@@ -21,7 +21,7 @@ between 89 and 287 bytes longer than the plaintext.
 
 Attempt to decrypt a PrivateBox message, using your secret key.
 If you where an intended recipient then the plaintext will be returned.
-If it was not for you, then `undefined` will be returned.
+If it was not for you, then `null` will be returned.
 
 ## Protocol
 
@@ -75,7 +75,7 @@ public static byte[] Encrypt(byte[] msg, byte[][] recipients, int maxRecipients 
 multiplies that with your secret key, then tests each possible
 recipient slot until it either decrypts a key or runs out of slots.
 If it runs out of slots, the message was not addressed to you,
-so `undefined` is returned. Else, the message is found and the body
+so `null` is returned. Else, the message is found and the body
 is decrypted.
 
 ``` c#
