@@ -54,7 +54,7 @@ namespace AuditDrivenCrypto.Tests
 
 			Assert.Catch(new TestDelegate(delegate
 			{
-				PrivateBox.Encrypt(msg, pubKeys);
+				PrivateBox.Multibox(msg, pubKeys);
 			}));
 		}
 
@@ -72,7 +72,7 @@ namespace AuditDrivenCrypto.Tests
 			// a recipient key may open the message.
 			foreach (var key in keys)
 			{
-				Assert.AreEqual(PrivateBox.Decrypt(ctxt, key.PrivateKey, n), msg);
+				Assert.AreEqual(PrivateBox.MultiboxOpen(ctxt, key.PrivateKey, n), msg);
 			}
 		}
 
@@ -95,18 +95,18 @@ namespace AuditDrivenCrypto.Tests
 		{
 			var msg = "hello there!";
 
-			var ctxt = PrivateBox.Encrypt(msg, new byte[][] { alice.PublicKey, bob.PublicKey });
+			var ctxt = PrivateBox.Multibox(msg, new byte[][] { alice.PublicKey, bob.PublicKey });
 			var pk = alice.PublicKey;
 			var sk = alice.PrivateKey;
 
 			Assert.Catch(new TestDelegate(delegate
 			{
-				PrivateBox.Encrypt(msg, new byte[][] { pk, pk, pk, pk }, -1);
+				PrivateBox.Multibox(msg, new byte[][] { pk, pk, pk, pk }, -1);
 			}));
 
 			Assert.Catch(new TestDelegate(delegate
 			{
-				PrivateBox.Decrypt(ctxt, sk, 256);
+				PrivateBox.MultiboxOpen(ctxt, sk, 256);
 			}));
 
 			Assert.Pass();

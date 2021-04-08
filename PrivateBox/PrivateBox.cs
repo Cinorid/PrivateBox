@@ -78,7 +78,7 @@ namespace AuditDrivenCrypto
 		/// <param name="recipients"></param>
 		/// <param name="maxRecipients"></param>
 		/// <returns></returns>
-		public static byte[] Encrypt(byte[] msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
+		public static byte[] Multibox(byte[] msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
 		{
 			return Multibox(msg, recipients.ToArray(), maxRecipients);
 		}
@@ -94,7 +94,7 @@ namespace AuditDrivenCrypto
 		/// <param name="recipients"></param>
 		/// <param name="maxRecipients"></param>
 		/// <returns></returns>
-		public static byte[] Encrypt(string msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+		public static byte[] Multibox(string msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
 		{
 			var _msg = Encoding.UTF8.GetBytes(msg);
 			return Multibox(_msg, recipients, maxRecipients);
@@ -111,7 +111,7 @@ namespace AuditDrivenCrypto
 		/// <param name="recipients"></param>
 		/// <param name="maxRecipients"></param>
 		/// <returns></returns>
-		public static byte[] Encrypt(string msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
+		public static byte[] Multibox(string msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
 		{
 			var _msg = Encoding.UTF8.GetBytes(msg);
 			return Multibox(_msg, recipients.ToArray(), maxRecipients);
@@ -124,7 +124,7 @@ namespace AuditDrivenCrypto
 		/// <param name="secretKey"></param>
 		/// <param name="maxRecipients"></param>
 		/// <returns>return null if secretKey is not valid</returns>
-		private static byte[] MultiboxOpenKey(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
+		public static byte[] MultiboxOpenKey(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
 		{
 			if (maxRecipients < 1 || maxRecipients > 255)
 			{
@@ -158,7 +158,13 @@ namespace AuditDrivenCrypto
 			return null;
 		}
 
-		private static byte[] MultiboxOpenBody(byte[] cypherText, byte[] length_and_key)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="cypherText"></param>
+		/// <param name="length_and_key"></param>
+		/// <returns></returns>
+		public static byte[] MultiboxOpenBody(byte[] cypherText, byte[] length_and_key)
 		{
 			if (length_and_key == null) return null;
 			var key = SubArray(length_and_key, 1, length_and_key.Length - 1);
@@ -178,7 +184,7 @@ namespace AuditDrivenCrypto
 		/// <param name="secretKey"></param>
 		/// <param name="maxRecipients"></param>
 		/// <returns>return null if secretKey is not valid</returns>
-		public static byte[] Decrypt(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
+		public static byte[] MultiboxOpen(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
 		{
 			if (maxRecipients < 1 || maxRecipients > 255)
 			{
