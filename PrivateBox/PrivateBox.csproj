@@ -2,24 +2,24 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<RootNamespace>SSB</RootNamespace>
-		<Product>SSB.PrivateBox</Product>
-		<Version>1.0.0</Version>
+		<RootNamespace>AuditDrivenCrypto</RootNamespace>
+		<Product>PrivateBox</Product>
+		<Version>0.3.1</Version>
 		<Authors>Cinorid (AhmadReza Saghari)</Authors>
 		<Company>Cinorid</Company>
-		<Description>C# (.NET Standard) implementation of the NodeJS PrivateBox https://github.com/auditdrivencrypto/private-box</Description>
-		<Summary>C# (.NET Standard) implementation of the NodeJS PrivateBox https://github.com/auditdrivencrypto/private-box</Summary>
+		<Description>C# (.NET Standard) implementation of the NodeJS private-box https://github.com/auditdrivencrypto/private-box</Description>
+		<Summary>C# (.NET Standard) implementation of the NodeJS private-box https://github.com/auditdrivencrypto/private-box</Summary>
 		<Copyright>Copyright © 2021 Cinorid (AhmadReza Saghari)</Copyright>
 		<PackageProjectUrl>https://github.com/Cinorid/PrivateBox</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<Title>SSB.PrivateBox</Title>
-		<PackageId>SSB.PrivateBox</PackageId>
-		<PackageTags>SSB.PrivateBox</PackageTags>
+		<Title>PrivateBox</Title>
+		<PackageId>PrivateBox</PackageId>
+		<PackageTags>PrivateBox</PackageTags>
 		<PackageIcon>packageIcon.png</PackageIcon>
 		<PackageIconFullPath>$(MSBuildThisFileDirectory)packageIcon.png</PackageIconFullPath>
-		<AssemblyName>SSB.PrivateBox</AssemblyName>
+		<AssemblyName>PrivateBox</AssemblyName>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -30,8 +30,6 @@
 		<None Include="..\README.md" Pack="true" PackagePath="README.md" />
 		<None Include="..\LICENSE.md" Pack="true" PackagePath="LICENSE.md" />
 		<None Include="$(PackageIconFullPath)" Pack="true" PackagePath="\" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Include="Rebex.Elliptic.Ed25519" Version="1.2.1" />
 		<PackageReference Include="Sodium.Core" Version="1.2.3" />
 	</ItemGroup>
 
