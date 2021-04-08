@@ -116,7 +116,56 @@ namespace AuditDrivenCrypto
 			var _msg = Encoding.UTF8.GetBytes(msg);
 			return Multibox(_msg, recipients.ToArray(), maxRecipients);
 		}
+		
+		/// <summary>
+		/// same as Multibox
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static byte[] Encrypt(byte[] msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			return Multibox(msg, recipients, maxRecipients);
+		}
 
+		/// <summary>
+		/// same as Multibox
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(byte[] msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			return Multibox(msg, recipients, maxRecipients);
+		}
+
+		/// <summary>
+		/// same as Multibox
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(string msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			return Multibox(msg, recipients, maxRecipients);
+		}
+
+		/// <summary>
+		/// same as Multibox
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(string msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			return Multibox(msg, recipients, maxRecipients);
+		}
+		
 		/// <summary>
 		/// 
 		/// </summary>
@@ -193,6 +242,18 @@ namespace AuditDrivenCrypto
 
 			var _key = MultiboxOpenKey(cypherText, secretKey, maxRecipients);
 			return MultiboxOpenBody(cypherText, _key);
+		}
+
+		/// <summary>
+		/// same as MultiboxOpen
+		/// </summary>
+		/// <param name="cypherText"></param>
+		/// <param name="secretKey"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns>return null if secretKey is not valid</returns>
+		public static byte[] Decrypt(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
+		{
+			return MultiboxOpen(cypherText, secretKey, maxRecipients);
 		}
 
 		private static T[] SubArray<T>(T[] data, int index, int length)

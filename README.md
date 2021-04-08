@@ -1,8 +1,8 @@
-# SSB.PrivateBox
+# AuditDrivenCrypto.PrivateBox
 C# (.NET Standard) implementation of the NodeJS private-box https://github.com/auditdrivencrypto/private-box
 
 A format for encrypting a private message to many parties.
-`SSB.PrivateBox` is designed according to the [auditdrivencrypto design process](https://github.com/crypto-browserify/crypto-browserify/issues/128)
+`AuditDrivenCrypto.PrivateBox` is designed according to the [auditdrivencrypto design process](https://github.com/crypto-browserify/crypto-browserify/issues/128)
 
 ## API
 
@@ -11,15 +11,15 @@ A format for encrypting a private message to many parties.
 Takes a `plaintext` Buffer of the message you want to encrypt,
 and an array of recipient public keys.
 Returns a message that is encrypted to all recipients
-and openable by them with `PrivateBox.decrypt`.
+and openable by them with `PrivateBox.Decrypt`.
 The `recipients` must be between 1 and 7 items long.
 
-The encrypted length will be `56 + (recipients.length * 33) + plaintext.length` bytes long,
+The encrypted length will be `56 + (recipients.Length * 33) + plaintext.Length` bytes long,
 between 89 and 287 bytes longer than the plaintext.
 
 ### Decrypt (cyphertext Buffer, secretKey curve25519_sk)
 
-Attempt to decrypt a private-box message, using your secret key.
+Attempt to decrypt a PrivateBox message, using your secret key.
 If you where an intended recipient then the plaintext will be returned.
 If it was not for you, then `undefined` will be returned.
 
@@ -27,37 +27,51 @@ If it was not for you, then `undefined` will be returned.
 
 ### Encryption
 
-`private-box` generates an ephemeral curve25519 keypair that will only be used with this message (`ephemeral`),
+`PrivateBox` generates an ephemeral curve25519 keypair that will only be used with this message (`ephemeral`),
 and a random key that will be used to encrypt the plaintext body (`body_key`).
-First, private-box outputs the ephemeral public key, then multiplies each recipient public key
+First, PrivateBox outputs the ephemeral public key, then multiplies each recipient public key
 with its secret to produce ephemeral shared keys (`shared_keys[1..n]`).
-Then, private-box concatenates `body_key` with the number of recipients,
+Then, PrivateBox concatenates `body_key` with the number of recipients,
 encrypts that to each shared key, and concatenates the encrypted body.
 
 ``` c#
-function Encrypt (plaintext, recipients) {
-  var ephemeral = keypair()
-  var nonce     = random(24)
-  var body_key  = random(32)
-  var body_key_with_length = concat([body_key, recipients.length])
-  return concat([
-    nonce,
-    ephemeral.publicKey,
-    concat(recipients.map(function (publicKey) {
-      return secretbox(
-        body_key_with_length,
-        nonce,
-        scalarmult(publicKey, ephemeral.secretKey)
-      )
-    }),
-    secretbox(plaintext, nonce, body_key)
-  ])
+public static byte[] Multibox(byte[] msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+{
+	if (maxRecipients < 1 || maxRecipients > 255)
+	{
+		throw new ArgumentOutOfRangeException("max recipients must be between 1 and 255.");
+	}
+
+	if (recipients.Length > maxRecipients)
+	{
+		throw new ArgumentOutOfRangeException("max recipients is:" + maxRecipients + " found:" + recipients.Length);
+	}
+
+	var nonce = RandomBytes(24);
+	var key = RandomBytes(32);
+	var onetime = PublicKeyBox.GenerateKeyPair();
+
+	var length_and_key = new List<byte>();
+	length_and_key.Add((byte)recipients.Length);
+	length_and_key.AddRange(key);
+
+	var res = new List<byte>();
+	res.AddRange(nonce);
+	res.AddRange(onetime.PublicKey);
+
+	foreach (var rec in recipients)
+	{
+		res.AddRange(SecretBox.Create(length_and_key.ToArray(), nonce, ScalarMult.Mult(onetime.PrivateKey, rec)));
+	}
+	res.AddRange(SecretBox.Create(msg, nonce, key));
+
+	return res.ToArray();
 }
 ```
 
 ## Decryption
 
-`private-box` takes the nonce and ephemeral public key,
+`PrivateBox` takes the nonce and ephemeral public key,
 multiplies that with your secret key, then tests each possible
 recipient slot until it either decrypts a key or runs out of slots.
 If it runs out of slots, the message was not addressed to you,
@@ -65,26 +79,36 @@ so `undefined` is returned. Else, the message is found and the body
 is decrypted.
 
 ``` c#
-function Decrypt (cyphertext, secretKey) {
-  var next = reader(cyphertext) // next() will read the passed N bytes
-  var nonce = next(24)
-  var publicKey = next(32)
-  var sharedKey = salarmult(publicKey, secretKey)
+public static byte[] Decrypt(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
+{
+	if (maxRecipients < 1 || maxRecipients > 255)
+	{
+		throw new ArgumentOutOfRangeException("max recipients must be between 1 and 255.");
+	}
+			
+	var nonce = SubArray(cypherText, 0, 24);
+	var onetime_pk = SubArray(cypherText, 24, 32);
+	var my_key = ScalarMult.Mult(secretKey, onetime_pk);
+	var start = 24 + 32;
+	var size = 32 + 1 + 16;
+	for (var i = 0; i <= maxRecipients; i++)
+	{
+		var s = start + size * i;
 
-  for(var i = 0; i < 7; i++) {
-    var maybe_key = next(33)
-    var key_with_length = secretbox_open(maybe_key, nonce, sharedKey)
-    if (key_with_length) { // decrypted!
-      var key = key_with_length.slice(0, 32)
-      var length = key_with_length[32]
-      return secretbox_open(
-        key,
-        cyphertext.slice(56 + 33*(length+1), cyphertext.length),
-      )
-    }
-  }
-  // this message was not addressed to the owner of secretKey
-  return undefined
+		if (s + size > (cypherText.Length - 16)) return null;
+
+		try
+		{
+			var length_and_key = SecretBox.Open(SubArray(cypherText, s, size), nonce, my_key);
+
+			var key = SubArray(length_and_key, 1, length_and_key.Length - 1);
+			var length = length_and_key[0];
+			return SecretBox.Open(SubArray(cypherText, start + length * size, cypherText.Length - (start + length * size)), nonce, key);
+		}
+		catch { }
+	}
+
+	return null;
 }
 ```
 
@@ -113,7 +137,7 @@ However, it's only possible to have one recipient.
 
 ### Minilock
 
-Minilock uses a similar approach to `private-box` but does not hide the
+Minilock uses a similar approach to `PrivateBox` but does not hide the
 number of recipients. In the case of a group discussion where multiple rounds
 of messages are sent to everyone, this may enable an eavesdropper to deanonymize
 the participiants of a discussion if the sender of each message is known.
