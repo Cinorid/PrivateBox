@@ -3,32 +3,47 @@ using System.Collections.Generic;
 using System.Text;
 using Sodium;
 
-namespace SSB
+namespace AuditDrivenCrypto
 {
-	public class PrivateBox
+	/// <summary>
+	/// an unaddressed box, with a private note-to-self so the sender can remember who it was for.
+	/// </summary>
+	public static class PrivateBox
 	{
-		private static int DEFAULT_MAX = 7;
+		private const int DEFAULT_MAX = 7;
 
-		public static byte[] RandomBytes(int n)
+		/// <summary>
+		/// Generate random bytes array
+		/// </summary>
+		/// <param name="count">length of bytes array</param>
+		/// <returns></returns>
+		public static byte[] RandomBytes(int count)
 		{
-			return Sodium.SodiumCore.GetRandomBytes(n);
+			return SodiumCore.GetRandomBytes(count);
 		}
 
-		public static int SetMax(int m)
+		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static byte[] Multibox(byte[] msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
 		{
-			m = (m > 0) ? m : DEFAULT_MAX;
-			if (m < 1 || m > 255)
-				throw new Exception("max recipients must be between 0 and 255.");
-			return m;
-		}
-
-		public static byte[] Multibox(string msg, byte[][] recipients, int max=7)
-		{
-			max = SetMax(max);
-
-			if (recipients.Length > max)
+			if (maxRecipients < 1 || maxRecipients > 255)
 			{
-				throw new Exception("max recipients is:" + max + " found:" + recipients.Length);
+				throw new ArgumentOutOfRangeException("max recipients must be between 1 and 255.");
+			}
+
+			if (recipients.Length > maxRecipients)
+			{
+				throw new ArgumentOutOfRangeException("max recipients is:" + maxRecipients + " found:" + recipients.Length);
 			}
 
 			var nonce = RandomBytes(24);
@@ -39,7 +54,8 @@ namespace SSB
 			length_and_key.Add((byte)recipients.Length);
 			length_and_key.AddRange(key);
 
-			var res = new List<byte>(nonce);
+			var res = new List<byte>();
+			res.AddRange(nonce);
 			res.AddRange(onetime.PublicKey);
 
 			foreach (var rec in recipients)
@@ -47,58 +63,130 @@ namespace SSB
 				res.AddRange(SecretBox.Create(length_and_key.ToArray(), nonce, ScalarMult.Mult(onetime.PrivateKey, rec)));
 			}
 			res.AddRange(SecretBox.Create(msg, nonce, key));
-			
+
 			return res.ToArray();
 		}
 
-		public static byte[] MultiboxOpenKey(byte[] ctxt, byte[] sk, int max = 7)
+		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(byte[] msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
 		{
-			max = SetMax(max);
+			return Multibox(msg, recipients.ToArray(), maxRecipients);
+		}
 
-			var nonce = SubArray(ctxt, 0, 24);
-			var onetime_pk = SubArray(ctxt, 24, 32);
-			var my_key = ScalarMult.Mult(sk, onetime_pk);
-			//var key = 24 + 32;
-			//var length = 24 + 32;
+		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt and encode it to UTF8 bytes array,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(string msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			var _msg = Encoding.UTF8.GetBytes(msg);
+			return Multibox(_msg, recipients, maxRecipients);
+		}
+
+		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt and encode it to UTF8 bytes array,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
+		/// </summary>
+		/// <param name="msg"></param>
+		/// <param name="recipients"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns></returns>
+		public static byte[] Encrypt(string msg, List<byte[]> recipients, int maxRecipients = DEFAULT_MAX)
+		{
+			var _msg = Encoding.UTF8.GetBytes(msg);
+			return Multibox(_msg, recipients.ToArray(), maxRecipients);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="cypherText"></param>
+		/// <param name="secretKey"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns>return null if secretKey is not valid</returns>
+		private static byte[] MultiboxOpenKey(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
+		{
+			if (maxRecipients < 1 || maxRecipients > 255)
+			{
+				throw new ArgumentOutOfRangeException("max recipients must be between 1 and 255.");
+			}
+
+			var nonce = SubArray(cypherText, 0, 24);
+			var onetime_pk = SubArray(cypherText, 24, 32);
+			var my_key = ScalarMult.Mult(secretKey, onetime_pk);
 			var start = 24 + 32;
 			var size = 32 + 1 + 16;
-			for (var i = 0; i <= max; i++)
+			for (var i = 0; i <= maxRecipients; i++)
 			{
 				var s = start + size * i;
 
-				if (s + size > (ctxt.Length - 16)) return null;
+				if (s + size > (cypherText.Length - 16)) return null;
 
-				var length_and_key = SecretBox.Open(SubArray(ctxt,s, size), nonce, my_key);
-
-				if (length_and_key != null)
+				try
 				{
-					return length_and_key;
+					var length_and_key = SecretBox.Open(SubArray(cypherText, s, size), nonce, my_key);
+
+					if (length_and_key != null)
+					{
+						return length_and_key;
+					}
 				}
+				catch (System.Security.Cryptography.CryptographicException) { }
+				catch (Exception ex) { System.Diagnostics.Trace.WriteLine(ex.Message); }
 			}
 
 			return null;
 		}
 
-		public static byte[] MultiboxOpenBody(byte[] ctxt, byte[] length_and_key)
+		private static byte[] MultiboxOpenBody(byte[] cypherText, byte[] length_and_key)
 		{
 			if (length_and_key == null) return null;
 			var key = SubArray(length_and_key, 1, length_and_key.Length - 1);
 			var length = length_and_key[0];
 			var start = 24 + 32;
 			var size = 32 + 1 + 16;
-			var nonce = SubArray(ctxt, 0, 24);
-			return SecretBox.Open(SubArray(ctxt, start + length * size, ctxt.Length - (start + length * size)), nonce, key);
+			var nonce = SubArray(cypherText, 0, 24);
+			return SecretBox.Open(SubArray(cypherText, start + length * size, cypherText.Length - (start + length * size)), nonce, key);
 		}
 
-		public static byte[] MultiboxOpen(byte[] ctxt, byte[] sk, int max)
+		/// <summary>
+		/// Attempt to decrypt a private-box message, using your secret key.
+		/// If you where an intended recipient then the plaintext will be returned.
+		/// If it was not for you, then 'null' will be returned.
+		/// </summary>
+		/// <param name="cypherText"></param>
+		/// <param name="secretKey"></param>
+		/// <param name="maxRecipients"></param>
+		/// <returns>return null if secretKey is not valid</returns>
+		public static byte[] Decrypt(byte[] cypherText, byte[] secretKey, int maxRecipients = DEFAULT_MAX)
 		{
-			var _key = MultiboxOpenKey(ctxt, sk, max);
-			if (_key != null)
+			if (maxRecipients < 1 || maxRecipients > 255)
 			{
-				return MultiboxOpenBody(ctxt, _key);
+				throw new ArgumentOutOfRangeException("max recipients must be between 1 and 255.");
 			}
-			else
-				return null;
+
+			var _key = MultiboxOpenKey(cypherText, secretKey, maxRecipients);
+			return MultiboxOpenBody(cypherText, _key);
 		}
 
 		private static T[] SubArray<T>(T[] data, int index, int length)
