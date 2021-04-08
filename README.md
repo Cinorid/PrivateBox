@@ -6,7 +6,7 @@ A format for encrypting a private message to many parties.
 
 ## API
 
-### Encrypt (plaintext Buffer, recipients Array<curve25519_pk>)
+### Encrypt (byte[] plaintext, recipients Array<curve25519_pk>)
 
 Takes a `plaintext` Buffer of the message you want to encrypt,
 and an array of recipient public keys.
@@ -17,7 +17,7 @@ The `recipients` must be between 1 and 7 items long.
 The encrypted length will be `56 + (recipients.Length * 33) + plaintext.Length` bytes long,
 between 89 and 287 bytes longer than the plaintext.
 
-### Decrypt (cyphertext Buffer, secretKey curve25519_sk)
+### Decrypt (byte[] cyphertext, byte[] secretKey)
 
 Attempt to decrypt a PrivateBox message, using your secret key.
 If you where an intended recipient then the plaintext will be returned.
@@ -35,7 +35,7 @@ Then, PrivateBox concatenates `body_key` with the number of recipients,
 encrypts that to each shared key, and concatenates the encrypted body.
 
 ``` c#
-public static byte[] Multibox(byte[] msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
+public static byte[] Encrypt(byte[] msg, byte[][] recipients, int maxRecipients = DEFAULT_MAX)
 {
 	if (maxRecipients < 1 || maxRecipients > 255)
 	{
