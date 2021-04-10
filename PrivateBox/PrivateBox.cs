@@ -116,8 +116,13 @@ namespace AuditDrivenCrypto
 			var _msg = Encoding.UTF8.GetBytes(msg);
 			return Multibox(_msg, recipients.ToArray(), maxRecipients);
 		}
-		
+
 		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
 		/// same as Multibox
 		/// </summary>
 		/// <param name="msg"></param>
@@ -131,6 +136,11 @@ namespace AuditDrivenCrypto
 		}
 
 		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
 		/// same as Multibox
 		/// </summary>
 		/// <param name="msg"></param>
@@ -143,6 +153,11 @@ namespace AuditDrivenCrypto
 		}
 
 		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt and encode it to UTF8 bytes array,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
 		/// same as Multibox
 		/// </summary>
 		/// <param name="msg"></param>
@@ -155,6 +170,11 @@ namespace AuditDrivenCrypto
 		}
 
 		/// <summary>
+		/// Takes a 'plaintext' Buffer of the message you want to encrypt and encode it to UTF8 bytes array,<para />
+		/// and an array of recipient public keys.<para />
+		/// Returns a message that is encrypted to all recipients<para />
+		/// and openable by them with 'PrivateBox.MultiboxOpen'.<para />
+		/// The 'recipients' must be between 1 and 7 items long.
 		/// same as Multibox
 		/// </summary>
 		/// <param name="msg"></param>
@@ -165,9 +185,9 @@ namespace AuditDrivenCrypto
 		{
 			return Multibox(msg, recipients, maxRecipients);
 		}
-		
+
 		/// <summary>
-		/// 
+		/// MultiboxOpenKey
 		/// </summary>
 		/// <param name="cypherText"></param>
 		/// <param name="secretKey"></param>
@@ -208,7 +228,7 @@ namespace AuditDrivenCrypto
 		}
 
 		/// <summary>
-		/// 
+		/// MultiboxOpenBody
 		/// </summary>
 		/// <param name="cypherText"></param>
 		/// <param name="length_and_key"></param>
@@ -245,6 +265,9 @@ namespace AuditDrivenCrypto
 		}
 
 		/// <summary>
+		/// Attempt to decrypt a private-box message, using your secret key.
+		/// If you where an intended recipient then the plaintext will be returned.
+		/// If it was not for you, then 'null' will be returned.
 		/// same as MultiboxOpen
 		/// </summary>
 		/// <param name="cypherText"></param>

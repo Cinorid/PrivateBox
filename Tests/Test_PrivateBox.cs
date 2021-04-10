@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AuditDrivenCrypto.Tests
 {
-	public class Tests
+	public class Test_PrivateBox
 	{
 		KeyPair alice;
 		KeyPair bob;
