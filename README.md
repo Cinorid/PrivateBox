@@ -4,6 +4,9 @@ C# (.NET Standard) implementation of the NodeJS private-box https://github.com/a
 A format for encrypting a private message to many parties.
 `AuditDrivenCrypto.PrivateBox` is designed according to the [auditdrivencrypto design process](https://github.com/crypto-browserify/crypto-browserify/issues/128)
 
+## Nuget Package
+https://www.nuget.org/packages/PrivateBox/
+
 ## API
 
 ### Encrypt (byte[] plaintext, byte[][] recipients)
